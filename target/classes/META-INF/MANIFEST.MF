@@ -1,10 +1,11 @@
 Manifest-Version: 1.0
-Implementation-Title: webchat
+Implementation-Title: maria.huertas.martin
 Implementation-Version: 0.0.1-SNAPSHOT
-Built-By: mica
+Built-By: maria
 Implementation-Vendor-Id: es.codeurjc
-Build-Jdk: 1.8.0_101
-Implementation-URL: http://projects.spring.io/spring-boot/webchat/
+Build-Jdk: 1.8.0_201
+Implementation-URL: http://projects.spring.io/spring-boot/maria.huerta
+ s.martin/
 Created-By: Maven Integration for Eclipse
 Implementation-Vendor: Pivotal Software, Inc.
 
