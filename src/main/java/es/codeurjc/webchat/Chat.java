@@ -4,12 +4,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import javafx.util.Pair;
 
 public class Chat {
 
 	private String name;
-	private ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
 
+	private ConcurrentMap<String, Pair<User, ExecutorService>> users = new ConcurrentHashMap<>(); 
 	private ChatManager chatManager;
 
 	public Chat(ChatManager chatManager, String name) {
@@ -22,32 +25,35 @@ public class Chat {
 	}
 
 	public void addUser(User user) {
-		users.putIfAbsent(user.getName(), user);
-		for(User u : users.values()){
-			if (u != user) {
-				u.newUserInChat(this, user);
+		ExecutorService executorService = Executors.newSingleThreadExecutor();
+		Pair<User, ExecutorService> existingUser = users.putIfAbsent(user.getName(), new Pair<>(user, executorService));
+		if (null == existingUser) {
+			for (Pair<User, ExecutorService> u : users.values()) {
+				if (u.getKey() != user) {
+					u.getValue().submit(() -> u.getKey().newUserInChat(this, user));
+				}
 			}
 		}
 	}
 
 	public void removeUser(User user) {
 		users.remove(user.getName());
-		for(User u : users.values()){
-			u.userExitedFromChat(this, user);
+		for (Pair<User, ExecutorService> u : users.values()){
+			u.getValue().submit(() -> u.getKey().userExitedFromChat(this, user));
 		}
 	}
 
-	public Collection<User> getUsers() {
+	public Collection<Pair<User, ExecutorService>> getUsers() {
 		return Collections.unmodifiableCollection(users.values());
 	}
 
-	public User getUser(String name) {
+	public Pair<User, ExecutorService> getUser(String name) {
 		return users.get(name);
 	}
 
 	public void sendMessage(User user, String message) {
-		for(User u : users.values()){
-			u.newMessage(this, user, message);
+		for (Pair<User, ExecutorService> u : users.values()){
+			u.getValue().submit(() -> u.getKey().newMessage(this, user, message));
 		}
 	}
 

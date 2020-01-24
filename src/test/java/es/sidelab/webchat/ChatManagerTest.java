@@ -14,6 +14,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import es.codeurjc.webchat.Chat;
@@ -45,6 +46,7 @@ public class ChatManagerTest {
 				+ chatName[0], Objects.equals(chatName[0], "Chat"));
 	}
 
+	@Ignore
 	@Test
 	public void newUserInChat() throws InterruptedException, TimeoutException {
 
