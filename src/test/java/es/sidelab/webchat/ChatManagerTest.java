@@ -280,5 +280,26 @@ public class ChatManagerTest {
 		String testResult = exchanger.exchange("hola");
 		assertTrue("Notified new user '" + testResult + "' is not equal than user name 'user2'","user2".equals(testResult));		
 	}
+	
+	@Test
+	public void improvement5_1_deleteChat() throws InterruptedException, TimeoutException {
+		ChatManager chatManager = new ChatManager(2);
+
+		chatManager.newUser(new TestUser("user") {
+			@Override
+			public void chatClosed(Chat chat) {
+			}
+		});
+		
+		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 0));
+		chatManager.newChat("Chat1", 5, TimeUnit.SECONDS);
+		Chat chat2 = chatManager.newChat("Chat2", 5, TimeUnit.SECONDS);
+		
+		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 2));
+		chatManager.closeChat(chat2);
+		
+		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 1));
+	}
+	
 
 }
