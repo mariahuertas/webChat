@@ -1,8 +1,6 @@
 package es.sidelab.webchat;
 
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.*;
-import java.time.*;
 import java.util.ConcurrentModificationException;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -26,6 +24,7 @@ import es.codeurjc.webchat.User;
 
 public class ChatManagerTest {
 
+	@Ignore("Solved in improvement 5")
 	@Test
 	public void newChat() throws InterruptedException, TimeoutException {
 
@@ -49,7 +48,7 @@ public class ChatManagerTest {
 				Objects.equals(chatName[0], "Chat"));
 	}
 
-	@Ignore
+	@Ignore("Solved in improvement 5")
 	@Test
 	public void newUserInChat() throws InterruptedException, TimeoutException {
 
@@ -223,4 +222,63 @@ public class ChatManagerTest {
 		boolean testResult = exchanger.exchange(false, timeout, TimeUnit.SECONDS);
 		assertTrue(testResult);
 	}
+	
+	@Test
+	public void improvement5_1_createNewChat() throws InterruptedException, TimeoutException {
+		ChatManager chatManager = new ChatManager(1);
+
+		// Crear un usuario que guarda en chatName el nombre del nuevo chat
+		final String[] chatName = new String[1];
+
+		chatManager.newUser(new TestUser("user") {
+			@Override
+			public void newChat(Chat chat) {
+				chatName[0] = chat.getName();
+			}
+		});
+
+		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 0));
+		
+		// Crear un nuevo chat en el chatManager
+		chatManager.newChat("Chat", 5, TimeUnit.SECONDS);
+
+		// Comprobar que el chat recibido en el método 'newChat' se llama 'Chat'
+		assertTrue("The method 'newChat' should be invoked with 'Chat', but the value is " + chatName[0],
+				Objects.equals(chatName[0], "Chat"));
+
+		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 1));
+	}
+	
+	@Test
+	public void improvement5_1_newUserInChat() throws InterruptedException, TimeoutException {		
+		ChatManager chatManager = new ChatManager(1);
+
+		Exchanger<String> exchanger = new Exchanger<String>();
+
+		TestUser user1 = new TestUser("user1") {
+			@Override
+			public void newUserInChat(Chat chat, User user) {
+				try {
+					exchanger.exchange(user.getName());
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+
+		TestUser user2 = new TestUser("user2");
+		chatManager.newUser(user1);
+		chatManager.newUser(user2);
+		
+		String chatName = "NewChat";
+		long timeout = 5;
+		Chat chat = chatManager.newChat(chatName, timeout, TimeUnit.SECONDS);
+		
+		chat.addUser(user1);
+		chat.addUser(user2);
+
+		String testResult = exchanger.exchange("hola");
+		assertTrue("Notified new user '" + testResult + "' is not equal than user name 'user2'","user2".equals(testResult));		
+	}
+
 }
