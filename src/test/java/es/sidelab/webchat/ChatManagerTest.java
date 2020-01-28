@@ -1,12 +1,14 @@
 package es.sidelab.webchat;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import java.time.*;
 import java.util.ConcurrentModificationException;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Exchanger;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
@@ -170,4 +172,55 @@ public class ChatManagerTest {
 		assertTrue("Total processing time is longer than expected", testTime < 1050);		
 	}
 
+	@Test
+	public void improvement4_2_messageOrder() throws InterruptedException, TimeoutException {
+		ChatManager chatManager = new ChatManager(1);
+		String chatName = "NewChat";
+		long timeout = 5;
+		Chat chat = chatManager.newChat(chatName, timeout, TimeUnit.SECONDS);
+
+		Exchanger<Boolean> exchanger = new Exchanger<Boolean>();
+
+		TestUser receiver = new TestUser("receiver") {
+			private int expectedMessage = 1;
+
+			@Override
+			public void newMessage(Chat chat, User user, String message) {
+				try {
+					if (expectedMessage == 5) {
+						System.out.println("exchange true");
+						exchanger.exchange(true);
+					}
+					if (Integer.parseInt(message) == expectedMessage) {
+						System.out.println("expectedMessage:" + expectedMessage + "Mensaje parseInt:"
+								+ Integer.parseInt(message) + "expectedMessage++");
+						expectedMessage++;
+					} else {
+						System.out.println("not equeal return false");
+						exchanger.exchange(false);
+					}
+
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+
+		TestUser sender = new TestUser("sender");
+		chatManager.newUser(sender);
+		chatManager.newUser(receiver);
+		chat.addUser(sender);
+		chat.addUser(receiver);
+
+		// sender part
+		new Thread(() -> {
+			for (int i = 1; i < 6; i++) {
+				chatManager.getChat(chatName).sendMessage(sender, String.valueOf(i));
+			}
+		}).start();
+
+		boolean testResult = exchanger.exchange(false, timeout, TimeUnit.SECONDS);
+		assertTrue(testResult);
+	}
 }
