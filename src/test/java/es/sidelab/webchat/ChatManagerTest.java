@@ -250,7 +250,7 @@ public class ChatManagerTest {
 	}
 	
 	@Test
-	public void improvement5_1_newUserInChat() throws InterruptedException, TimeoutException {		
+	public void improvement5_3_newUserInChat() throws InterruptedException, TimeoutException {		
 		ChatManager chatManager = new ChatManager(1);
 
 		Exchanger<String> exchanger = new Exchanger<String>();
@@ -277,12 +277,12 @@ public class ChatManagerTest {
 		chat.addUser(user1);
 		chat.addUser(user2);
 
-		String testResult = exchanger.exchange("hola");
+		String testResult = exchanger.exchange("-");
 		assertTrue("Notified new user '" + testResult + "' is not equal than user name 'user2'","user2".equals(testResult));		
 	}
 	
 	@Test
-	public void improvement5_1_deleteChat() throws InterruptedException, TimeoutException {
+	public void improvement5_2_deleteChat() throws InterruptedException, TimeoutException {
 		ChatManager chatManager = new ChatManager(2);
 
 		chatManager.newUser(new TestUser("user") {
@@ -301,5 +301,37 @@ public class ChatManagerTest {
 		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 1));
 	}
 	
+	@Test
+	public void improvement5_4_userExitFromChat() throws InterruptedException, TimeoutException {		
+		ChatManager chatManager = new ChatManager(1);
+
+		Exchanger<String> exchanger = new Exchanger<String>();
+
+		TestUser user1 = new TestUser("user1") {
+			@Override
+			public void userExitedFromChat(Chat chat, User user) {
+				try {
+					exchanger.exchange(user.getName());
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+
+		TestUser user2 = new TestUser("user2");  // this one is going to be removed
+		chatManager.newUser(user1);
+		chatManager.newUser(user2);
+		
+		String chatName = "NewChat";
+		long timeout = 5;
+		Chat chat = chatManager.newChat(chatName, timeout, TimeUnit.SECONDS);
+		chat.addUser(user1);
+		chat.addUser(user2);
+		
+		chat.removeUser(user2);
+
+		String testResult = exchanger.exchange("-");
+		assertTrue("Notified that user removed is '" + testResult + "and it should be user2","user2".equals(testResult));		
+	}
 
 }

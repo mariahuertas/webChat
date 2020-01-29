@@ -47,8 +47,8 @@ public class Chat {
 		return Collections.unmodifiableCollection(users.values());
 	}
 
-	public Pair<User, ExecutorService> getUser(String name) {
-		return users.get(name);
+	public User getUser(String name) {
+		return users.get(name).getKey(); 
 	}
 
 	public void sendMessage(User user, String message) {
