@@ -302,7 +302,7 @@ public class ChatManagerTest {
 	}
 	
 	@Test
-	public void improvement5_4_userExitFromChat() throws InterruptedException, TimeoutException {		
+	public void improvement5_4_userExitedFromChat() throws InterruptedException, TimeoutException {		
 		ChatManager chatManager = new ChatManager(1);
 
 		Exchanger<String> exchanger = new Exchanger<String>();
@@ -331,7 +331,40 @@ public class ChatManagerTest {
 		chat.removeUser(user2);
 
 		String testResult = exchanger.exchange("-");
-		assertTrue("Notified that user removed is '" + testResult + "and it should be user2","user2".equals(testResult));		
+		assertTrue("Notified that user removed is '" + testResult + " and it should be user2","user2".equals(testResult));		
 	}
 
+	@Test
+	public void improvement5_5_sendMessageToAChat() throws InterruptedException, TimeoutException {
+		ChatManager chatManager = new ChatManager(1);
+		String chatName = "NewChat";
+		long timeout = 5;
+		Chat chat = chatManager.newChat(chatName, timeout, TimeUnit.SECONDS);
+
+		Exchanger<String> exchanger = new Exchanger<String>();
+
+		TestUser receiver = new TestUser("receiver") {
+			@Override
+			public void newMessage(Chat chat, User user, String message) {
+				try {
+					exchanger.exchange(message);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+
+		TestUser sender = new TestUser("sender");
+		chatManager.newUser(sender);
+		chatManager.newUser(receiver);
+		chat.addUser(sender);
+		chat.addUser(receiver);
+
+		String message = "Hi, I am " + sender.getName();
+		chatManager.getChat(chatName).sendMessage(sender, message);
+		
+
+		String testResult = exchanger.exchange("-");
+		assertTrue("Notified that message is '" + testResult + " and it should be 'Hi, I am sender","Hi, I am sender".equals(testResult));
+	}
 }
