@@ -79,7 +79,8 @@ public class ChatManagerTest {
 	}
 
 	@Test
-	public void improvement1_verifyNoConcurrenceErrosInChatManagerAndChat() throws InterruptedException, TimeoutException {
+	public void improvement1_verifyNoConcurrenceErrosInChatManagerAndChat()
+			throws InterruptedException, TimeoutException {
 		// OPCION B
 		// Create 50 chats in ChatMananger
 		ChatManager chatManager = new ChatManager(50);
@@ -137,7 +138,7 @@ public class ChatManagerTest {
 		// Initialize CDL -> numUser
 		CountDownLatch countDownLatchInit = new CountDownLatch(numUsers);
 
-		for (int i = 0; i < numUsers ; i++) {
+		for (int i = 0; i < numUsers; i++) {
 			// creates a TestUser object and registers it in ChatManager
 			TestUser testUser = new TestUser("user_" + i) {
 				@Override
@@ -156,19 +157,20 @@ public class ChatManagerTest {
 		}
 
 		User testUser = chatManager.getUser("user_1");
-		
+
 		// initialize count
 		Long timeBeforeSendMessage = System.currentTimeMillis();
+
 		chatManager.getChat(chatName).sendMessage(testUser, "testing time");
-		// user who sends the message is waiting in an await until all the others have invoked the countDown
+
+		// user who sends the message is waiting in an await until all the others have
+		// invoked the countDown
 		countDownLatchInit.await();
-		
-		// how long does it take to process the message? 
+
+		// how long does it take to process the message?
 		long testTime = System.currentTimeMillis() - timeBeforeSendMessage;
-		
-		System.out.print("Time spend: " + testTime);
-		// expectedTime +- 1 second
-		assertTrue("Total processing time is longer than expected", testTime < 1050);		
+		long expectedTime = 1050;
+		assertTrue("Total processing time is longer than expected", testTime < expectedTime);
 	}
 
 	@Test
@@ -187,18 +189,13 @@ public class ChatManagerTest {
 			public void newMessage(Chat chat, User user, String message) {
 				try {
 					if (expectedMessage == 5) {
-						System.out.println("exchange true");
 						exchanger.exchange(true);
 					}
 					if (Integer.parseInt(message) == expectedMessage) {
-						System.out.println("expectedMessage:" + expectedMessage + "Mensaje parseInt:"
-								+ Integer.parseInt(message) + "expectedMessage++");
 						expectedMessage++;
 					} else {
-						System.out.println("not equeal return false");
 						exchanger.exchange(false);
 					}
-
 					Thread.sleep(500);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
@@ -212,17 +209,14 @@ public class ChatManagerTest {
 		chat.addUser(sender);
 		chat.addUser(receiver);
 
-		// sender part
-		new Thread(() -> {
-			for (int i = 1; i < 6; i++) {
-				chatManager.getChat(chatName).sendMessage(sender, String.valueOf(i));
-			}
-		}).start();
+		for (int i = 1; i < 6; i++) {
+			chatManager.getChat(chatName).sendMessage(sender, String.valueOf(i));
+		}
 
-		boolean testResult = exchanger.exchange(false, timeout, TimeUnit.SECONDS);
-		assertTrue(testResult);
+		boolean areMessagesInOrder = exchanger.exchange(false, timeout, TimeUnit.SECONDS);
+		assertTrue("The messages are not received in order ", areMessagesInOrder);
 	}
-	
+
 	@Test
 	public void improvement5_1_createNewChat() throws InterruptedException, TimeoutException {
 		ChatManager chatManager = new ChatManager(1);
@@ -237,8 +231,9 @@ public class ChatManagerTest {
 			}
 		});
 
-		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 0));
-		
+		assertTrue("The number of chats is: " + chatManager.getChats().size(),
+				Objects.equals(chatManager.getChats().size(), 0));
+
 		// Crear un nuevo chat en el chatManager
 		chatManager.newChat("Chat", 5, TimeUnit.SECONDS);
 
@@ -246,11 +241,12 @@ public class ChatManagerTest {
 		assertTrue("The method 'newChat' should be invoked with 'Chat', but the value is " + chatName[0],
 				Objects.equals(chatName[0], "Chat"));
 
-		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 1));
+		assertTrue("The number of chats is: " + chatManager.getChats().size(),
+				Objects.equals(chatManager.getChats().size(), 1));
 	}
-	
+
 	@Test
-	public void improvement5_3_newUserInChat() throws InterruptedException, TimeoutException {		
+	public void improvement5_3_newUserInChat() throws InterruptedException, TimeoutException {
 		ChatManager chatManager = new ChatManager(1);
 
 		Exchanger<String> exchanger = new Exchanger<String>();
@@ -269,18 +265,19 @@ public class ChatManagerTest {
 		TestUser user2 = new TestUser("user2");
 		chatManager.newUser(user1);
 		chatManager.newUser(user2);
-		
+
 		String chatName = "NewChat";
 		long timeout = 5;
 		Chat chat = chatManager.newChat(chatName, timeout, TimeUnit.SECONDS);
-		
+
 		chat.addUser(user1);
 		chat.addUser(user2);
 
 		String testResult = exchanger.exchange("-");
-		assertTrue("Notified new user '" + testResult + "' is not equal than user name 'user2'","user2".equals(testResult));		
+		assertTrue("Notified new user '" + testResult + "' is not equal than user name 'user2'",
+				"user2".equals(testResult));
 	}
-	
+
 	@Test
 	public void improvement5_2_deleteChat() throws InterruptedException, TimeoutException {
 		ChatManager chatManager = new ChatManager(2);
@@ -290,19 +287,23 @@ public class ChatManagerTest {
 			public void chatClosed(Chat chat) {
 			}
 		});
+
+		assertTrue("The number of chats is: " + chatManager.getChats().size(),
+				Objects.equals(chatManager.getChats().size(), 0));
 		
-		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 0));
 		chatManager.newChat("Chat1", 5, TimeUnit.SECONDS);
 		Chat chat2 = chatManager.newChat("Chat2", 5, TimeUnit.SECONDS);
-		
-		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 2));
+
+		assertTrue("The number of chats is: " + chatManager.getChats().size(),
+				Objects.equals(chatManager.getChats().size(), 2));
 		chatManager.closeChat(chat2);
-		
-		assertTrue("The number of chats is: " + chatManager.getChats().size(), Objects.equals(chatManager.getChats().size(), 1));
+
+		assertTrue("The number of chats is: " + chatManager.getChats().size(),
+				Objects.equals(chatManager.getChats().size(), 1));
 	}
-	
+
 	@Test
-	public void improvement5_4_userExitedFromChat() throws InterruptedException, TimeoutException {		
+	public void improvement5_4_userExitedFromChat() throws InterruptedException, TimeoutException {
 		ChatManager chatManager = new ChatManager(1);
 
 		Exchanger<String> exchanger = new Exchanger<String>();
@@ -318,20 +319,21 @@ public class ChatManagerTest {
 			}
 		};
 
-		TestUser user2 = new TestUser("user2");  // this one is going to be removed
+		TestUser user2 = new TestUser("user2"); // this one is going to be removed
 		chatManager.newUser(user1);
 		chatManager.newUser(user2);
-		
+
 		String chatName = "NewChat";
 		long timeout = 5;
 		Chat chat = chatManager.newChat(chatName, timeout, TimeUnit.SECONDS);
 		chat.addUser(user1);
 		chat.addUser(user2);
-		
+
 		chat.removeUser(user2);
 
 		String testResult = exchanger.exchange("-");
-		assertTrue("Notified that user removed is '" + testResult + " and it should be user2","user2".equals(testResult));		
+		assertTrue("Notified that user removed is '" + testResult + " and it should be user2",
+				"user2".equals(testResult));
 	}
 
 	@Test
@@ -362,9 +364,9 @@ public class ChatManagerTest {
 
 		String message = "Hi, I am " + sender.getName();
 		chatManager.getChat(chatName).sendMessage(sender, message);
-		
 
 		String testResult = exchanger.exchange("-");
-		assertTrue("Notified that message is '" + testResult + " and it should be 'Hi, I am sender","Hi, I am sender".equals(testResult));
+		assertTrue("Notified that message is '" + testResult + " and it should be 'Hi, I am sender",
+				"Hi, I am sender".equals(testResult));
 	}
 }
