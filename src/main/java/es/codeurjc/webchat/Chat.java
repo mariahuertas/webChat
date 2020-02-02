@@ -27,10 +27,10 @@ public class Chat {
 	public void addUser(User user) {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		Pair<User, ExecutorService> existingUser = users.putIfAbsent(user.getName(), new Pair<>(user, executorService));
-		if (null == existingUser) {
-			for (Pair<User, ExecutorService> u : users.values()) {
-				if (u.getKey() != user) {
-					u.getValue().submit(() -> u.getKey().newUserInChat(this, user));
+		if (existingUser == null) {
+			for (Pair<User, ExecutorService> userPair : users.values()) {
+				if (userPair.getKey() != user) {
+					userPair.getValue().submit(() -> userPair.getKey().newUserInChat(this, user));
 				}
 			}
 		}
@@ -38,8 +38,8 @@ public class Chat {
 
 	public void removeUser(User user) {
 		users.remove(user.getName());
-		for (Pair<User, ExecutorService> u : users.values()){
-			u.getValue().submit(() -> u.getKey().userExitedFromChat(this, user));
+		for (Pair<User, ExecutorService> userPair : users.values()){
+			userPair.getValue().submit(() -> userPair.getKey().userExitedFromChat(this, user));
 		}
 	}
 
@@ -52,8 +52,8 @@ public class Chat {
 	}
 
 	public void sendMessage(User user, String message) {
-		for (Pair<User, ExecutorService> u : users.values()){
-			u.getValue().submit(() -> u.getKey().newMessage(this, user, message));
+		for (Pair<User, ExecutorService> userPair : users.values()){
+			userPair.getValue().submit(() -> userPair.getKey().newMessage(this, user, message));
 		}
 	}
 
