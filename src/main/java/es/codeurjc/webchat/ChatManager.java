@@ -30,29 +30,7 @@ public class ChatManager {
 		}
 	}
 
-	public Chat newChat(String name, long timeout, TimeUnit unit) throws InterruptedException,
-	TimeoutException {
-	
-		if (chats.size() == maxChats) {
-			throw new TimeoutException("There is no enought capacity to create a new chat");
-		}
-
-		if(chats.containsKey(name)){
-			return chats.get(name);
-		} else {
-			Chat newChat = new Chat(this, name);
-			chats.putIfAbsent(name, newChat);
-			
-			for(User user : users.values()){
-				user.newChat(newChat);
-			}
-
-			return newChat;
-		}
-	}
-	
-	public Chat newChatWithTimeOut(String name, long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
-
+	public Chat newChat(String name, long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
 		try {
 			if (!chatAvailable.tryAcquire(timeout, unit)) {
 				throw new TimeoutException("There is no enought capacity to create a new chat");

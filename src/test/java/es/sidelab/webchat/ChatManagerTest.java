@@ -373,11 +373,11 @@ public class ChatManagerTest {
 	@Test
 	public void newFunctionality_createNewChatWithTimeOut() throws InterruptedException, TimeoutException {
 		ChatManager chatManager = new ChatManager(1);
-		chatManager.newChatWithTimeOut("Chat", 5, TimeUnit.SECONDS);
+		chatManager.newChat("Chat", 5, TimeUnit.SECONDS);
 
 		Long timeBeforeCreateNewChat = System.currentTimeMillis();
 		try {
-			chatManager.newChatWithTimeOut("Chat2", 5, TimeUnit.SECONDS);
+			chatManager.newChat("Chat2", 5, TimeUnit.SECONDS);
 
 		} catch (TimeoutException e) {
 			long testTime = System.currentTimeMillis() - timeBeforeCreateNewChat;
