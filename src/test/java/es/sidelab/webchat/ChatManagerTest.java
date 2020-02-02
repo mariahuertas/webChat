@@ -147,9 +147,11 @@ public class ChatManagerTest {
 		chat.addUser(sender);
 		chat.addUser(receiver);
 
-		for (int i = 1; i < 6; i++) {
-			chatManager.getChat(chatName).sendMessage(sender, String.valueOf(i));
-		}
+		new Thread(() -> {
+			for (int i = 1; i < 6; i++) {
+				chatManager.getChat(chatName).sendMessage(sender, String.valueOf(i));
+			}
+		}).start();
 
 		boolean areMessagesInOrder = exchanger.exchange(false, timeout, TimeUnit.SECONDS);
 		assertTrue("The messages are not received in order ", areMessagesInOrder);
