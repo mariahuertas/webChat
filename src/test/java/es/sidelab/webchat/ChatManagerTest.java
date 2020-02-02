@@ -369,4 +369,19 @@ public class ChatManagerTest {
 		assertTrue("Notified that message is '" + testResult + " and it should be 'Hi, I am sender",
 				"Hi, I am sender".equals(testResult));
 	}
+	
+	@Test
+	public void newFunctionality_createNewChatWithTimeOut() throws InterruptedException, TimeoutException {
+		ChatManager chatManager = new ChatManager(1);
+		chatManager.newChatWithTimeOut("Chat", 5, TimeUnit.SECONDS);
+
+		Long timeBeforeCreateNewChat = System.currentTimeMillis();
+		try {
+			chatManager.newChatWithTimeOut("Chat2", 5, TimeUnit.SECONDS);
+
+		} catch (TimeoutException e) {
+			long testTime = System.currentTimeMillis() - timeBeforeCreateNewChat;
+			assertTrue("Total processing time is longer than expected. TestTime:" + testTime, testTime > 5);
+		}	
+	}
 }
